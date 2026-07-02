@@ -1,15 +1,20 @@
 import os
+import json
+from flask import Flask, request
 import telebot
 from google import genai
 from google.genai import types
 
-# 1. Configuração de segurança (As chaves agora ficam escondidas no servidor)
+# 1. Configuração de segurança
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # 2. Inicializando os sistemas
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Criamos um aplicativo web mini para receber as mensagens da "campainha"
+app = Flask(__name__)
 
 # 3. Personalidade do seu assistente
 jarvis_prompt = """
@@ -33,18 +38,20 @@ def obter_resposta_jarvis(mensagem_usuario):
     except Exception as e:
         return f"Desculpe, Senhor. Houve uma falha no meu sistema de IA: {e}"
 
-# 5. Configuração para receber as mensagens do Telegram
+# 5. Configuração para processar a mensagem recebida
 @bot.message_handler(func=lambda message: True)
 def responder_mensagem(message):
-    print(f"O Senhor me mandou: {message.text}")
-    
-    # Busca a resposta com a IA
     resposta_jarvis = obter_resposta_jarvis(message.text)
-    
-    # Envia de volta para o seu Telegram
     bot.reply_to(message, resposta_jarvis)
 
-# 6. Comando para ligar o robô
-if __name__ == "__main__":
-    print("Sistemas iniciados. Jarvis está online e aguardando comandos no Telegram...")
-    bot.infinity_polling()
+# 6. A "Campainha": O Telegram envia a mensagem para cá
+@app.route('/' + TELEGRAM_TOKEN, methods=['POST'])
+def webhook():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "OK", 200
+
+@app.route('/')
+def index():
+    return "Jarvis está operacional.", 200
