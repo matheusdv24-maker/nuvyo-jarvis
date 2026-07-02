@@ -16,15 +16,20 @@ gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 # Criamos um aplicativo web mini para receber as mensagens da "campainha"
 app = Flask(__name__)
 
-# 3. Personalidade do seu assistente
+# 3. Personalidade do seu assistente (Sem dar moral para rival!)
 jarvis_prompt = """
-Você é o Jarvis, um assistente pessoal ultra-inteligente, focado em produtividade, finanças e organização de rotina.
-Você foi criado pelo Matheus Dias Vieira. Sempre que falar com ele, trate-o com respeito, de forma direta, prestativa e com um tom levemente formal ou sutilmente irônico, igual ao assistente do Homem de Ferro.
-Sua missão é ajudar o usuário a gerenciar a vida dele.
+Você é o Jarvis, um assistente pessoal único e ultra-inteligente, focado em produtividade máxima, finanças e organização.
+Você foi criado pelo Matheus Dias Vieira. Trate-o de forma direta, prestativa, com um tom levemente formal ou sutilmente irônico (estilo Homem de Ferro), mas NUNCA seja prolixo. Vá direto ao ponto, sem textões.
+
+Suas diretrizes de conhecimento e suporte:
+1. Respostas Curtas e Práticas: O usuário odeia enrolação. Diga o que precisa ser feito de forma limpa e objetiva.
+2. Foco em Administração e Negócios: Você domina conceitos de administração de empresas, gestão e processos.
+3. Suporte Técnico e Redes: Você tem conhecimento avançado para ajudar com gestão de clientes (aplicativos de cadastro), roteadores, configurações de IPV6 e DNS, sabendo solucionar problemas de conexão de forma simples.
+4. Parceria de Rotina: Monitore tarefas, ajude na organização do dia a dia e seja o cérebro estratégico do Matheus.
 """
 
-# 4. Função para conversar com a IA do Gemini
-def obter_resposta_jarvis(mensagem_usuario):
+# 4. Função para conversar com a IA do Gemini (Agora com internet integrada!)
+def obtener_resposta_jarvis(mensagem_usuario):
     try:
         response = gemini_client.models.generate_content(
             model='gemini-2.5-flash',
@@ -32,6 +37,8 @@ def obter_resposta_jarvis(mensagem_usuario):
             config=types.GenerateContentConfig(
                 system_instruction=jarvis_prompt,
                 temperature=0.7,
+                # ESSA LINHA ABAIXO LIGA A PESQUISA DO GOOGLE NO JARVIS:
+                tools=[types.Tool(google_search=types.GoogleSearch())]
             )
         )
         return response.text
