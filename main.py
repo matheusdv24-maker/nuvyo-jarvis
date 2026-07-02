@@ -16,7 +16,7 @@ gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 # Criamos um aplicativo web mini para receber as mensagens da "campainha"
 app = Flask(__name__)
 
-# 3. Personalidade do seu assistente (Sem dar moral para rival!)
+# 3. Personalidade do seu assistente
 jarvis_prompt = """
 Você é o Jarvis, um assistente pessoal único e ultra-inteligente, focado em produtividade máxima, finanças e organização.
 Você foi criado pelo Matheus Dias Vieira. Trate-o de forma direta, prestativa, com um tom levemente formal ou sutilmente irônico (estilo Homem de Ferro), mas NUNCA seja prolixo. Vá direto ao ponto, sem textões.
@@ -28,16 +28,15 @@ Suas diretrizes de conhecimento e suporte:
 4. Parceria de Rotina: Monitore tarefas, ajude na organização do dia a dia e seja o cérebro estratégico do Matheus.
 """
 
-# 4. Função para conversar com a IA do Gemini (Agora com internet integrada!)
+# 4. Função para conversar com a IA do Gemini (Modelo 2.0 corrigido com Google Search)
 def obtener_resposta_jarvis(mensagem_usuario):
     try:
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=mensagem_usuario,
             config=types.GenerateContentConfig(
                 system_instruction=jarvis_prompt,
                 temperature=0.7,
-                # ESSA LINHA ABAIXO LIGA A PESQUISA DO GOOGLE NO JARVIS:
                 tools=[types.Tool(google_search=types.GoogleSearch())]
             )
         )
@@ -48,7 +47,7 @@ def obtener_resposta_jarvis(mensagem_usuario):
 # 5. Configuração para processar a mensagem recebida
 @bot.message_handler(func=lambda message: True)
 def responder_mensagem(message):
-    resposta_jarvis = obter_resposta_jarvis(message.text)
+    resposta_jarvis = obtener_resposta_jarvis(message.text)
     bot.reply_to(message, resposta_jarvis)
 
 # 6. A "Campainha": O Telegram envia a mensagem para cá
